@@ -23,6 +23,7 @@ abstract class table{
 	public $limit;
 	public $distinct = false;
 	public $execute = true;
+	public $conn = false;
 	
 	/**
 	* Funcion table
@@ -57,10 +58,11 @@ abstract class table{
 	*/
 	
 	
-	public function table($key = 0){
+	public function table($key = 0,&$conn=null){
 		$this->info();
 		$this->fields[$this->key] = $key;
 		$this->{$this->key} = $key;
+		$this->conn = $conn;
 	}
 	/**
 	* Funcion create
@@ -137,7 +139,22 @@ abstract class table{
 		return $tables;
 	}
 
-	public function read($fields){
+	function runSQL($sql){
+		$resp = false;
+		if($this->conn==NULL){
+			echo $sql;
+			exit;
+		}
+		$resp = pg_query($this->conn, $sql);
+		if($resp==false){
+			var_dump($sql,$this->conn);
+			exit;
+		}
+		return $resp;
+		
+	}
+
+	public function read($fields,&$conn=NULL){
 		$fields = explode(",",$fields);
 		$fields2 = $this->object_format($fields);
 		$distinct = $this->distinct ? "DISTINCT " : "";
@@ -160,17 +177,15 @@ abstract class table{
 		}
 		$sql = $sql." FROM ".$this->table_name." ".$tables." WHERE ".$clause.$this->clause.$limit;
 		$this->sql = $sql;
-		//var_dump($this->execute);
 		if(count($fields2) && $this->execute){
-
-			if($this->debug)
-				echo $sql."<br/>";	
-			$result_sql = mysql_query($sql);
-			$multiple_results = $result_sql && mysql_num_rows($result_sql) >= 1 && isset($this->search_clause);
-
+			if($this->debug){
+				echo $sql."<br><br>";
+			}
+			$result_sql = $this->runSQL($sql,$this->conn);
+			$multiple_results = $result_sql!==false && pg_num_rows($result_sql)>=1 && isset($this->search_clause);
 			if($multiple_results){
 				$j =0;
-				while($row = mysql_fetch_row($result_sql)){
+				while($row = pg_fetch_row($result_sql)){
 					$result_array[$j] = new $this(0);
 					for($i=0;$i<count($row);$i++){
 						$fields[$i] = trim($fields[$i]);
@@ -181,22 +196,20 @@ abstract class table{
 									$result_array[$j]->$obj = new $obj();
 								}
 								$result_array[$j]->$obj->$result[2][0] = $row[$i];
-								
 							}
-						}else if(isset($this->objects[$fields[$i]])){
+						}elseif(isset($this->objects[$fields[$i]])){
 							$result_array[$j]->{$fields[$i]} = new $this->objects[$fields[$i]]($row[$i]);
 						}else{
 							$result_array[$j]->{$fields[$i]} = $row[$i];
 						}
 						$result_array[$j]->fields[$fields[$i]] = $row[$i];
-						
 					};
 					$j++;
 				}
 				return $result_array;
 			}else{
-				if($result_sql){
-					$row = mysql_fetch_row($result_sql);
+				if($this->conn !=NULL && pg_num_rows($result_sql)>0){
+					$row = pg_fetch_row($result_sql);
 					for($i=0;$i<count($row);$i++){
 						$fields[$i] = trim($fields[$i]);
 						if(preg_match_all('/(\w+)\s*=>\s*(\w+)/i', $fields[$i], $result, PREG_PATTERN_ORDER)){
@@ -220,8 +233,9 @@ abstract class table{
 					};
 					//return $row;
 				}else{
-					if($this->debug)
-						echo "Mysql Error :".mysql_error();
+					if($this->debug){
+						echo "Error: <br>";
+					}
 					return false;
 				}
 				
@@ -233,7 +247,6 @@ abstract class table{
 			if(preg_match_all('/(\w+)\s*=>\s*(.+)/i', $field, $result, PREG_PATTERN_ORDER)){
 				if(isset($this->has_many[$result[1][0]])){
 					if(isset($has_many_fields[$result[1][0]])){
-						///echo $result[2][0];
 						$has_many_fields[$result[1][0]] = $has_many_fields[$result[1][0]].$result[2][0].",";
 					}else{
 						$has_many_fields[$result[1][0]] = $result[2][0].",";
@@ -246,8 +259,6 @@ abstract class table{
 		if($has_many){
 			foreach($this->has_many as $key => $value){
 				if(isset($has_many_fields[$key])){
-					//var_dump( $fields);
-					//echo $value;
 					$fields = substr($has_many_fields[$key],0,-1);
 					$object = new $value();
 					if($this->debug)
@@ -257,7 +268,7 @@ abstract class table{
 					if(isset($this->has_many_limits[$key])){$object->limit = $this->has_many_limits[$key];}
 					if(isset($this->has_many_clause[$key])){$object->search_clause = $object->search_clause." AND ".$this->has_many_clause[$key];}
 					if(isset($this->has_many_order_by[$key])){$object->order_by = $this->has_many_order_by[$key];}
-					
+					$object->conn = &$this->conn;
 					$this->{$key} = $object->read($fields);
 				}
 			}

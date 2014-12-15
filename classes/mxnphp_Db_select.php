@@ -147,7 +147,7 @@ class mxnphp_Db_select{
 		if(trim($num) != ""){
 			$num = ", ".$num;
 		}
-		$this->_limit = "LIMIT $begin $num";
+		$this->_limit = "LIMIT $begin OFFSET $num";
 		return $this;
 	}
 	public function union(){

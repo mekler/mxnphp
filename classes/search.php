@@ -92,7 +92,7 @@ abstract class search{
 			$fields = $this->get_fields();
 			$table = $this->table;
 			$sort = isset($this->sort_by) ? "ORDER BY ".$this->sort_by : "";
-			$sql = "SELECT $fields FROM $table $sort LIMIT $start, $end";
+			$sql = "SELECT $fields FROM $table $sort LIMIT $start OFFSET $end";
 			if($this->debug)
 				echo $sql;
 			$this->fetch_results($sql);

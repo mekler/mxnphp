@@ -91,15 +91,21 @@ abstract class controler extends event_dispatcher{
 	 * Realiza la conexion y valida si la conexion fue exitosa
 	 * @return string $conn regresa la variable con los datos de conexion 
 	 *
-	 */		
+	 */
+	/*
 	public function dbConnect(){
 		$conn = mysql_connect($this->config->db_host, $this->config->db_user, $this->config->db_pass) or die ('Error connecting to mysql');
 		mysql_select_db($this->config->db_name);
 		mysql_query("SET NAMES 'utf8'");
 		return $conn;
 	}
-	protected function dbDisconect(){
-		mysql_close();
+	*/
+
+	function dbConnect($conn=NULL){
+		if($conn==NULL){
+			$conn = pg_connect("host=".$this->config->db_host." port=5432 dbname=".$this->config->db_name." user=".$this->config->db_user." password=".$this->config->db_pass);
+		}
+		return ($conn!==false && $conn!=NULL?$conn:false);
 	}
 	/**
 	 * Funcion verify_login
@@ -133,7 +139,7 @@ abstract class controler extends event_dispatcher{
 		return unlink($dir.$file);
 	}
 	protected function create_record($fields,$object_name,$array = false){
-		if($this->dbConnect()){
+		if($this->conn instanceof PDO){
 			$object = new $object_name(0);
 			$object->debug = $this->debug;
 			if($object->create($fields,$array)){
@@ -165,7 +171,7 @@ abstract class controler extends event_dispatcher{
 		return mxnphp_request::get_request($variable);
 	}
 	protected function destroy_record($record_id,$object_name){
-		if($this->dbConnect()){
+		if($this->conn instanceof PDO){
 			$object = new $object_name($record_id);
 			$object->debug = $this->debug;
 			return $object->destroy();
@@ -173,7 +179,7 @@ abstract class controler extends event_dispatcher{
 		return false;
 	}
 	protected function update_record($object_name,$fields,$record_id,$array = false){
-		if($this->dbConnect()){
+		if($this->conn instanceof PDO){
 			$object = new $object_name($record_id);
 			$object->debug = $this->debug;
 			return $object->update($fields,$array);
@@ -278,9 +284,6 @@ abstract class controler extends event_dispatcher{
         $result = $email->Send();
 
         if (!$this->debug) return $result;
-
-        var_dump($result);
-
         return $result;
     }
 

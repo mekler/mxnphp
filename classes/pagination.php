@@ -9,9 +9,11 @@ class pagination{
 	private $name_class  = false;
 	private $clause_table = "";
 	public $total_results = 0;
-	public function pagination($class,$per_page=10,$clause = false,$page_variable = "p"){
+	public $conn = NULL;
+	public function pagination($class,$per_page=10,$clause = false,$page_variable = "p",$conn=NULL){
 		$this->page_variable = $page_variable;
 		$this->per_page = $per_page;
+		$this->conn = $conn;
 		if (!is_object($class)){
 			$classes = explode(",",$class);
 			$tables ="";
@@ -120,11 +122,11 @@ class pagination{
 		}
 	}
     protected function exec_query($query){
-		$result = mysql_query($query);
+		$result = pg_query($query,$this->conn);
                 $i = 0;
                 $records = array();
-		if($result && mysql_num_rows($result) >= 1){
-			while ($row = mysql_fetch_assoc($result)) {
+		if($result && pg_num_rows($result) >= 1){
+			while ($row = pg_fetch_assoc($result)) {
 				foreach($row as $key=>$value){
 					$records[$i]->$key = $value;
 				}
