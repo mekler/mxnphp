@@ -52,7 +52,7 @@ class pagination{
 			$end = $this->per_page;
 			$this->document_pages = ceil(($count) / $this->per_page);	
 			$this->current_page = (isset($_REQUEST[$this->page_variable])) ? $_REQUEST[$this->page_variable] : 1;
-			$this->limit = ($count > $this->per_page) ? "$start, $end" : false; 
+			$this->limit = ($count > $this->per_page) ? "$end OFFSET $start" : false; 
 			$this->count = $count;
 		}else{
 			$start = 0;
@@ -122,12 +122,14 @@ class pagination{
 		}
 	}
     protected function exec_query($query){
-		$result = pg_query($query,$this->conn);
-                $i = 0;
-                $records = array();
+
+		$result = pg_query($this->conn,$query);
+        $i = 0;
+        $records = array();
 		if($result && pg_num_rows($result) >= 1){
 			while ($row = pg_fetch_assoc($result)) {
 				foreach($row as $key=>$value){
+					$records[$i] = new stdClass();
 					$records[$i]->$key = $value;
 				}
 				$i++;

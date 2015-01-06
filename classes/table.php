@@ -147,8 +147,7 @@ abstract class table{
 		}
 		$resp = pg_query($this->conn, $sql);
 		if($resp==false){
-			var_dump($sql,$this->conn);
-			exit;
+			echo "Error en sql a resolver:".var_dump($sql,$this->conn);
 		}
 		return $resp;
 		
@@ -208,29 +207,31 @@ abstract class table{
 				}
 				return $result_array;
 			}else{
-				if($this->conn !=NULL && pg_num_rows($result_sql)>0){
-					$row = pg_fetch_row($result_sql);
-					for($i=0;$i<count($row);$i++){
-						$fields[$i] = trim($fields[$i]);
-						if(preg_match_all('/(\w+)\s*=>\s*(\w+)/i', $fields[$i], $result, PREG_PATTERN_ORDER)){
-							
-							if(isset($this->objects[$result[1][0]])){
+				if($this->conn !=NULL && $result_sql!=false){
+					if(pg_num_rows($result_sql)>0){
+						$row = pg_fetch_row($result_sql);
+						for($i=0;$i<count($row);$i++){
+							$fields[$i] = trim($fields[$i]);
+							if(preg_match_all('/(\w+)\s*=>\s*(\w+)/i', $fields[$i], $result, PREG_PATTERN_ORDER)){
 								
-								$obj = $this->objects[$result[1][0]];
-								if(!isset($this->{$obj})){
-									$this->{$this->objects[$result[1][0]]} = new $obj(0);
+								if(isset($this->objects[$result[1][0]])){
 									
+									$obj = $this->objects[$result[1][0]];
+									if(!isset($this->{$obj})){
+										$this->{$this->objects[$result[1][0]]} = new $obj(0);
+										
+									}
+									
+									$this->{$result[1][0]}->{$result[2][0]} = $row[$i];
 								}
-								
-								$this->{$result[1][0]}->{$result[2][0]} = $row[$i];
+							}else if(isset($this->objects[$fields[$i]])){
+								$this->{$fields[$i]} = new $this->objects[$fields[$i]]($row[$i]);
+							}else{
+								$this->{$fields[$i]} = $row[$i];
 							}
-						}else if(isset($this->objects[$fields[$i]])){
-							$this->{$fields[$i]} = new $this->objects[$fields[$i]]($row[$i]);
-						}else{
-							$this->{$fields[$i]} = $row[$i];
-						}
-						$this->fields[$fields[$i]] = $row[$i];
-					};
+							$this->fields[$fields[$i]] = $row[$i];
+						};
+					}
 					//return $row;
 				}else{
 					if($this->debug){
