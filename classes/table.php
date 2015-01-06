@@ -147,7 +147,9 @@ abstract class table{
 		}
 		$resp = pg_query($this->conn, $sql);
 		if($resp==false){
-			var_dump($sql,$this->conn);
+			echo 'resp false';
+			echo $sql;
+			//var_dump($sql,$this->conn);
 			exit;
 		}
 		return $resp;

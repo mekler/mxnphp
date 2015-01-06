@@ -15,13 +15,13 @@ class mxnphp_request{
 		return $action;
 	}
 	protected function clean_input($input){
-		return mysql_real_escape_string(trim($input));
+		return pg_escape_string(trim($input));
 	}
 	static function get($variable){
-		return isset($_GET[$variable]) ? mysql_real_escape_string(trim($_GET[$variable])) : false;
+		return isset($_GET[$variable]) ? pg_escape_string(trim($_GET[$variable])) : false;
 	}
 	static function post($variable){
-		return isset($_POST[$variable]) ? mysql_real_escape_string(trim($_POST[$variable])) : false;
+		return isset($_POST[$variable]) ? pg_escape_string(trim($_POST[$variable])) : false;
 	}
 	static function get_request($variable){
 		if(self::get($variable)){
