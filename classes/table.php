@@ -339,7 +339,7 @@ abstract class table{
 	* 
 	*/
 	public function search_clause($field,$value,$comparator = '=',$wildcards = false){
-		$value = mysql_real_escape_string($value);
+		$value = pg_escape_string($value);
 		$w = $wildcards ? "%" : "";
 		return $this->search_clause .= "$field $comparator '$w$value$w'";		
 	}
@@ -366,7 +366,7 @@ abstract class table{
 	}
 	protected function clean($fields){
 		for($i=0;$i<count($fields);$i++){
-			$fields[$i] = str_replace("(;)",",",mysql_real_escape_string(trim($fields[$i])));
+			$fields[$i] = str_replace("(;)",",",pg_escape_string(trim($fields[$i])));
 			if($fields[$i] == ""){
 				$fields[$i] = "NULL";
 			}else{
