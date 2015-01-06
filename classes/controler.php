@@ -152,7 +152,7 @@ abstract class controler extends event_dispatcher{
 		return $this->clean_input($_POST[$variable]);
 	}
 	protected function clean_input($input){
-		return mysql_real_escape_string(trim($input));
+		return pg_escape_string(trim($input));
 	}
 	protected function get($variable){
 		return mxnphp_request::get($variable);
