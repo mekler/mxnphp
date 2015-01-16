@@ -78,7 +78,7 @@ abstract class table{
 	* con los valores.
 	*/
 	
-	public function create($fields,$values = false){
+	public function create($fields,$values = false,$return = false){
 		$fields = explode(",",$fields);
 		//$values = explode(",",$values);
 		if(!$values){
@@ -92,7 +92,7 @@ abstract class table{
 		
 		$sql ="INSERT INTO ".$this->table_name." (";
 		for($i=0;$i<count($fields);$i++){
-			$sql = $sql."`".trim($fields[$i])."`, ";
+			$sql = $sql.trim($fields[$i]).", ";
 		}
 		$sql = substr($sql,0,-2).") VALUES (";
 		for($i=0;$i<count($values);$i++){
@@ -102,7 +102,11 @@ abstract class table{
 				$sql = $sql."".$values[$i].", ";
 			}
 		}
-		$sql = substr($sql,0,-2).");";
+		$sql = substr($sql,0,-2).")";
+		
+		if($return!=false)
+			$sql.=" RETURNING ".$return.';';
+
 		if($this->debug)
 			echo $sql."</br>";
 		$result = $this->execute_sql($sql);
@@ -113,8 +117,9 @@ abstract class table{
 				
 			}
 		}
-		if($this->insert_id){
-			$this->fields[$this->key] = $this->id = mysql_insert_id();
+		if($return!=false){
+			$data = pg_fetch_row($result);
+			$this->fields[$this->key] = $this->id = $data[0];
 		}
 		return $result;
 	}
@@ -345,12 +350,13 @@ abstract class table{
 	}
 	  
 	protected function execute_sql($sql){
-		$result = mysql_query($sql);
+		$result = pg_query($sql);
 		if($this->get_id)
 			$this->{$this->key} = mysql_insert_id();
 		return $result;
 	}
-        public function ExecuteReturnObject($query){
+    
+    public function ExecuteReturnObject($query){
 		$result = $this->execute_sql($query);
                 $i = 0;
                 $records = array();
