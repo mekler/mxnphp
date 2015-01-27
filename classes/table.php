@@ -146,14 +146,14 @@ abstract class table{
 
 	function runSQL($sql){
 		$resp = false;
-		if($this->conn==NULL){
+		/*if($this->conn==NULL){
 			echo $sql;
 			exit;
-		}
+		}*/
 		$resp = pg_query($this->conn, $sql);
-		if($resp==false){
+		/*if($resp==false){
 			echo "Error en sql a resolver:".var_dump($sql,$this->conn);
-		}
+		}*/
 		return $resp;
 		
 	}
