@@ -55,6 +55,27 @@ class mxnphp{
 			include_once $file;
 		}
 	}
+	public function load_custom_404(){
+		global $__mxnphp_classes_loaded__ ;
+		if(isset($this->config->controler404) && $this->config->controler404){
+			if(isset($this->config->action404) && $this->config->action404){
+				$controler_name = $this->config->controler404;
+				$action = $this->config->action404;
+				$controler = new $controler_name($this->config,$security);
+				$controller_loaded = isset($__mxnphp_classes_loaded__[$controler_name]) && $__mxnphp_classes_loaded__[$controler_name]=="controller"?true:false;
+				if($controller_loaded){
+					$event = new event(array("controler" => &$controler_name, "action" => &$action));
+					$controler->dispatch_event("pre_method",$event);
+					if(method_exists($controler,$action)){
+						$controler->$action();
+						return true;
+					}
+				}	
+			}
+			return false;
+
+		}
+	}
 	/**
 	* Function load_controler
 	*
@@ -82,19 +103,25 @@ class mxnphp{
 				}else{
 					//echo "template not found";
 					// $controler->config->document_root = $this->config->document_root."public/";
-					$controler->default_action($action);
+					if(!$this->load_custom_404()){
+						$controler->default_action($action);
+					}
 				}
 			}else{
-				if(isset($this->config->redirect) && $this->config->redirect){
-					header('location: '.$this->config->redirect);
-				}else echo "<p>$controler_name does not exist</p>";	
+				if(!$this->load_custom_404()){
+					if(isset($this->config->redirect) && $this->config->redirect){
+						header('location: '.$this->config->redirect);
+					}else echo "<p>$controler_name does not exist</p>";	
+				}
 			}
 		}else{
-			if(isset($this->config->redirect) && $this->config->redirect){
-					header('location: '.$this->config->redirect);							
-					//header("HTTP/1.0 404 Not Found");
-			}else
-				echo "<p>$controler_name does not exist</p>";
+			if(!$this->load_custom_404()){
+				if(isset($this->config->redirect) && $this->config->redirect){
+						header('location: '.$this->config->redirect);							
+						//header("HTTP/1.0 404 Not Found");
+				}else
+					echo "<p>$controler_name does not exist</p>";
+			}
 		}
 	}
 }
