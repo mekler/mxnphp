@@ -309,11 +309,11 @@ abstract class table{
 			if(isset($this->md5[$fields[$i]])){
 				$sql .= "`".trim($fields[$i])."` = MD5( ".$values[$i]." ), ";
 			}else{
-				$sql .= "`".trim($fields[$i])."` = ".$values[$i].", ";
+				$sql .= "".trim($fields[$i])." = ".$values[$i].", ";
 			}
 		}
 		$sql = substr($sql,0,-2);
-		$sql = $sql." WHERE `".$this->key."` = '".$this->fields[$this->key]."' LIMIT 1;";
+		$sql = $sql." WHERE ".$this->key." = '".$this->fields[$this->key]."';";
 		if($this->debug)
 			echo $sql."<br/>";
 		return $this->execute_sql($sql);
